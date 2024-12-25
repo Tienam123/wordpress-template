@@ -1,0 +1,49 @@
+services:
+  db:
+    container_name: "${APP_NAME}-db"
+    image: mysql:5.7
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./docker/mysql:/var/lib/mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: my-site
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: "${APP_NAME}-phpmyadmin"
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 300M
+    restart: always
+    ports:
+      - 8081:80
+
+  wordpress:
+    container_name: "${APP_NAME}-wordpress"
+    image: wordpress
+    depends_on:
+      - db
+    links:
+      - db
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: my-site
+      WORDPRESS_DEBUG: 1
+    volumes:
+      - "./docker/wordpress:/var/www/html"
+      - "./theme/:/var/www/html/wp-content/themes/ale"
+      - "./plugin/:/var/www/html/wp-content/plugins/ale-core"
+      - "./docker/custom.ini:/usr/local/etc/php/conf.d/custom.ini"
